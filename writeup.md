@@ -178,10 +178,32 @@ Here I'll talk about the approach I took, what techniques I used, what worked an
 
 * The `scale` and `block_per_step` parameters have the most significant effect on the speed of the code. However, since I wanted to get the most correct detections, I tweaked these parameters for best detection. However, 2` scales` of $[1, 1.5]$ and `block_per_step`$=2$ will give comparable results with a bit more false positives.
 
+---
+## Review
+To see some ideas on using deep learning to detect vehicles, [read this post on the U-Net architecture](https://chatbotslife.com/small-u-net-for-vehicle-detection-9eec216f9fd6). And for some inspiration to try combining this project and the advanced lane finding pipeline, [check out this video](https://www.youtube.com/watch?v=Fi9j5cr_qEk).
 
+- Explanation given for methods used to extract HOG features, including which color space was chosen, which HOG parameters (orientations, pixels_per_cell, cells_per_block), and why.
+	* Nice job discussing how you arrived at your HOG parameters by experimenting with different combinations, and it's great you also outputted examples of images and their HOG features. To enhance the discussion you could also include some documentation of any training results you obtained with the parameter settings you experimented with. (e.g., a [markdown table](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#tables) of settings and prediction accuracy obtained)
 
+- The HOG features extracted from the training data have been used to train a classifier, could be SVM, Decision Tree or other. Features should be scaled to zero mean and unit variance before training the classifier.
+	* Good description of how you trained the linear SVC with the [extracted HOG features](http://www.pyimagesearch.com/2014/11/10/histogram-oriented-gradients-object-detection/) and additional color features.
 
+	* Suggestions: To improve the model's accuracy, you could also try a [grid search](http://scikit-learn.org/stable/modules/grid_search.html) to optimize the SVC's [C parameter](http://stats.stackexchange.com/questions/31066/what-is-the-influence-of-c-in-svms-with-linear-kernel).
+To reduce the feature dimensionality and help speed up the pipeline, you can consider removing the color histogram features — many students are able to exclude them and still get good results.
 
+- A sliding window approach has been implemented, where overlapping tiles in each test image are classified as vehicle or non-vehicle. Some justification has been given for the particular implementation chosen.
+	* Nice work implementing the [sliding window search](http://www.pyimagesearch.com/2015/03/23/sliding-windows-for-object-detection-with-python-and-opencv/), and describing your solution of subsampling 2 scales of the whole image HOG extraction.
 
+- Some discussion is given around how you improved the reliability of the classifier i.e., fewer false positives and more reliable car detections (this could be things like choice of feature vector, thresholding the decision function, hard negative mining etc.)
+	* Good job optimizing the performance of the classifier with your chosen feature vector, sliding window settings, and heatmap thresholding.
 
+	* To help reduce false positives, other ideas you could try include: 
+		1. Using the [LinearSVC](http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html) built-in [decision_function](http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html#sklearn.svm.LinearSVC.decision_function) method, which returns a confidence score based on how far a data point is from the decision boundary — higher values equate to higher confidence predictions that can be thresholded.
+		2. Augment the training with [hard negative mining](https://www.reddit.com/r/computervision/comments/2ggc5l/what_is_hard_negative_mining_and_how_is_it/).
+		
+- Discussion includes some consideration of problems/issues faced, what could be improved about their algorithm/pipeline, and what hypothetical cases would cause their pipeline to fail.
+	* Good discussion of the issues you faced with the color spaces, feature vector, and sliding window settings.
 
+	1. For improved speed performance in extracting HOG features, you could also try using cv2.HOGDescriptor (read more below):
+http://stackoverflow.com/questions/28390614/opencv-hogdescripter-python
+	2. For additional ideas on performing vehicle detection, you can read about using [Haar Cascades](https://github.com/andrewssobral/vehicle_detection_haarcascades).
